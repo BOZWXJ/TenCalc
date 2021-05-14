@@ -7,6 +7,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Windows.Input;
 
 namespace TenCalc
 {
@@ -35,43 +37,58 @@ namespace TenCalc
 
 		public int HookProcedure(int nCode, IntPtr wParam, IntPtr lParam)
 		{
+			bool cancel = false;
 			if (nCode >= 0 && (wParam == (IntPtr)User32.WindowMessage.WM_KEYDOWN || wParam == (IntPtr)User32.WindowMessage.WM_SYSKEYDOWN)) {
 				var kb = (Win32Api.KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(Win32Api.KBDLLHOOKSTRUCT));
-				var vkCode = (int)kb.wVk;
-				OnKeyDownEvent(vkCode);
-
-				System.Diagnostics.Debug.WriteLine($"{kb.wVk} {kb.wScan} {kb.dwFlags:x} {kb.dwExtraInfo:x}");
-
+				if ((kb.dwFlags & Win32Api.KBDLLHOOKSTRUCTF.LLKHF_INJECTED) == 0) {
+					cancel = OnKeyDownEvent(kb);
+				}
 			} else if (nCode >= 0 && (wParam == (IntPtr)User32.WindowMessage.WM_KEYUP || wParam == (IntPtr)User32.WindowMessage.WM_SYSKEYUP)) {
 				var kb = (Win32Api.KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(Win32Api.KBDLLHOOKSTRUCT));
-				var vkCode = (int)kb.wVk;
-				OnKeyUpEvent(vkCode);
+				if ((kb.dwFlags & Win32Api.KBDLLHOOKSTRUCTF.LLKHF_INJECTED) == 0) {
+					cancel = OnKeyUpEvent(kb);
+				}
 			}
-			return User32.CallNextHookEx(hookId.DangerousGetHandle(), nCode, wParam, lParam);
+			if (cancel) {
+				return (int)new IntPtr(1);
+			} else {
+				return User32.CallNextHookEx(hookId.DangerousGetHandle(), nCode, wParam, lParam);
+			}
 		}
 
-		public delegate void KeyEventHandler(object sender, KeyEventArg e);
+		public delegate void KeyEventHandler(object sender, KeyHookEventArgs e);
 		public event KeyEventHandler KeyDownEvent;
 		public event KeyEventHandler KeyUpEvent;
 
-		protected void OnKeyDownEvent(int keyCode)
+		protected bool OnKeyDownEvent(Win32Api.KBDLLHOOKSTRUCT kb)
 		{
-			KeyDownEvent?.Invoke(this, new KeyEventArg(keyCode));
+			var e = new KeyHookEventArgs(kb);
+			KeyDownEvent?.Invoke(this, e);
+			return e.Cancel;
 		}
-		protected void OnKeyUpEvent(int keyCode)
+
+		protected bool OnKeyUpEvent(Win32Api.KBDLLHOOKSTRUCT kb)
 		{
-			KeyUpEvent?.Invoke(this, new KeyEventArg(keyCode));
+			var e = new KeyHookEventArgs(kb);
+			KeyUpEvent?.Invoke(this, e);
+			return e.Cancel;
 		}
 	}
-
-	public class KeyEventArg : CancelEventArgs
+	public class KeyHookEventArgs : CancelEventArgs
 	{
-		public int KeyCode { get; }
+		public Keys VkCode { get; }
+		public uint ScanCode { get; }
+		public Win32Api.KBDLLHOOKSTRUCTF Flags { get; }
+		public bool IsLLKHF_EXTENDED { get; }
+		public uint Time { get; }
 
-		public KeyEventArg(int keyCode)
+		public KeyHookEventArgs(Win32Api.KBDLLHOOKSTRUCT kb)
 		{
-			KeyCode = keyCode;
+			VkCode = (Keys)kb.wVk;
+			ScanCode = kb.wScan;
+			Flags = kb.dwFlags;
+			IsLLKHF_EXTENDED = (Flags & Win32Api.KBDLLHOOKSTRUCTF.LLKHF_EXTENDED) != 0;
+			Time = kb.time;
 		}
 	}
-
 }

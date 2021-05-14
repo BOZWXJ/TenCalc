@@ -107,11 +107,11 @@ namespace TenCalc
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
 			this.Text = "Form1";
+			this.TopMost = true;
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.CalcForm_FormClosing);
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.CalcForm_FormClosed);
-			this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.CalcForm_MouseDown);
-			this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.CalcForm_MouseMove);
-			this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.CalcForm_MouseUp);
+			this.Load += new System.EventHandler(this.CalcForm_Load);
+			this.Shown += new System.EventHandler(this.CalcForm_Shown);
 			this.contextMenuStrip1.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
 			this.ResumeLayout(false);

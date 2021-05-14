@@ -46,5 +46,17 @@ namespace TenCalc.Properties {
                 this["WindowPosition"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool NumLock {
+            get {
+                return ((bool)(this["NumLock"]));
+            }
+            set {
+                this["NumLock"] = value;
+            }
+        }
     }
 }
