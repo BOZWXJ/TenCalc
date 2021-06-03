@@ -35,9 +35,7 @@ namespace TenCalc
 			this.toolStripMenuItemInfo = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
 			this.toolStripMenuItemExit = new System.Windows.Forms.ToolStripMenuItem();
-			this.pictureBox1 = new System.Windows.Forms.PictureBox();
 			this.contextMenuStrip1.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// notifyIcon1
@@ -82,25 +80,11 @@ namespace TenCalc
 			this.toolStripMenuItemExit.Text = "終了";
 			this.toolStripMenuItemExit.Click += new System.EventHandler(this.toolStripMenuItemExit_Click);
 			// 
-			// pictureBox1
-			// 
-			this.pictureBox1.BackColor = System.Drawing.Color.Transparent;
-			this.pictureBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.pictureBox1.Location = new System.Drawing.Point(0, 0);
-			this.pictureBox1.Name = "pictureBox1";
-			this.pictureBox1.Size = new System.Drawing.Size(800, 450);
-			this.pictureBox1.TabIndex = 1;
-			this.pictureBox1.TabStop = false;
-			this.pictureBox1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.CalcForm_MouseDown);
-			this.pictureBox1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.CalcForm_MouseMove);
-			this.pictureBox1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.CalcForm_MouseUp);
-			// 
 			// CalcForm
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(800, 450);
-			this.Controls.Add(this.pictureBox1);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
 			this.Name = "CalcForm";
 			this.ShowIcon = false;
@@ -112,8 +96,10 @@ namespace TenCalc
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.CalcForm_FormClosed);
 			this.Load += new System.EventHandler(this.CalcForm_Load);
 			this.Shown += new System.EventHandler(this.CalcForm_Shown);
+			this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.CalcForm_MouseDown);
+			this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.CalcForm_MouseMove);
+			this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.CalcForm_MouseUp);
 			this.contextMenuStrip1.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
 			this.ResumeLayout(false);
 
 		}
@@ -126,7 +112,6 @@ namespace TenCalc
 		private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemInfo;
 		private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
 		private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemExit;
-		private System.Windows.Forms.PictureBox pictureBox1;
 	}
 }
 

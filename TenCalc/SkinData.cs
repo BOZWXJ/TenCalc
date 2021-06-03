@@ -10,23 +10,27 @@ using System.Windows.Forms;
 
 namespace TenCalc
 {
-	class SkinData
+	public static class SkinData
 	{
-		public bool IsLoad { get; private set; } = false;
-		public bool IsShift { get; private set; } = false;
-		public bool IsControl { get; private set; } = false;
-		public bool IsAlt { get; private set; } = false;
-		public Dictionary<Button.Status, Bitmap> BackgroundImages { get; private set; } = new Dictionary<Button.Status, Bitmap>();
-		public Dictionary<Keys, Button> Buttons { get; private set; } = new Dictionary<Keys, Button>();
+		public static string Name { get; private set; } = string.Empty;
+		public static bool IsLoad { get; private set; } = false;
+		public static bool IsControl { get; private set; } = false;
+		public static bool IsShift { get; private set; } = false;
+		public static bool IsAlt { get; private set; } = false;
+		public static Dictionary<Mode, Bitmap> OnImages { get; set; } = new Dictionary<Mode, Bitmap>();
+		public static Dictionary<Mode, Bitmap> OffImages { get; set; } = new Dictionary<Mode, Bitmap>();
+		public static Dictionary<Keys, Button> Buttons { get; private set; } = new Dictionary<Keys, Button>();
 
-		public bool LoadSkinFile()
+		public static bool LoadSkinFile()
 		{
 			IsLoad = false;
-			IsShift = false;
 			IsControl = false;
+			IsShift = false;
 			IsAlt = false;
-
-			string path = Path.Combine(Path.GetDirectoryName(Environment.GetCommandLineArgs()[0]), "Skin", $"{Properties.Settings.Default.SkinName}.zip");
+			OnImages.Clear();
+			OffImages.Clear();
+			Buttons.Clear();
+			string path = Path.Combine(Path.GetDirectoryName(Application.StartupPath), "Skin", $"{Properties.Settings.Default.SkinName}.zip");
 			try {
 				using (var zip = ZipFile.OpenRead(path)) {
 					foreach (var item in zip.Entries) {
@@ -35,28 +39,28 @@ namespace TenCalc
 							ReadLocation(item);
 							break;
 						case "on.png":
-							BackgroundImages.TryAdd(Button.Status.On, ReadImage(item));
+							OnImages.TryAdd(Mode.None, ReadImage(item));
 							break;
 						case "off.png":
-							BackgroundImages.TryAdd(Button.Status.Off, ReadImage(item));
+							OffImages.TryAdd(Mode.None, ReadImage(item));
 							break;
 						case "on_control.png":
-							BackgroundImages.TryAdd(Button.Status.OnControl, ReadImage(item));
+							OnImages.TryAdd(Mode.Control, ReadImage(item));
 							break;
 						case "off_control.png":
-							BackgroundImages.TryAdd(Button.Status.OffControl, ReadImage(item));
+							OffImages.TryAdd(Mode.Control, ReadImage(item));
 							break;
 						case "on_shift.png":
-							BackgroundImages.TryAdd(Button.Status.OnShift, ReadImage(item));
+							OnImages.TryAdd(Mode.Shift, ReadImage(item));
 							break;
 						case "off_shift.png":
-							BackgroundImages.TryAdd(Button.Status.OffShift, ReadImage(item));
+							OffImages.TryAdd(Mode.Shift, ReadImage(item));
 							break;
 						case "on_alt.png":
-							BackgroundImages.TryAdd(Button.Status.OnAlt, ReadImage(item));
+							OnImages.TryAdd(Mode.Alt, ReadImage(item));
 							break;
 						case "off_alt.png":
-							BackgroundImages.TryAdd(Button.Status.OffAlt, ReadImage(item));
+							OffImages.TryAdd(Mode.Alt, ReadImage(item));
 							break;
 						}
 					}
@@ -64,40 +68,50 @@ namespace TenCalc
 			} catch {
 				return false;
 			}
-			if (Buttons.Count != 0 && BackgroundImages.ContainsKey(Button.Status.Off) && BackgroundImages.ContainsKey(Button.Status.On)) {
+			if (Buttons.Count != 0 && OnImages.ContainsKey(Mode.None) && OffImages.ContainsKey(Mode.None)) {
+				Name = Properties.Settings.Default.SkinName;
 				IsLoad = true;
 			} else {
 				return false;
 			}
-			if (BackgroundImages.ContainsKey(Button.Status.OffControl) && BackgroundImages.ContainsKey(Button.Status.OnControl)) {
+			if (OnImages.ContainsKey(Mode.Control) && OffImages.ContainsKey(Mode.Control)) {
 				IsControl = true;
 			}
-			if (BackgroundImages.ContainsKey(Button.Status.OffShift) && BackgroundImages.ContainsKey(Button.Status.OnShift)) {
+			if (OnImages.ContainsKey(Mode.Shift) && OffImages.ContainsKey(Mode.Shift)) {
 				IsShift = true;
 			}
-			if (BackgroundImages.ContainsKey(Button.Status.OffAlt) && BackgroundImages.ContainsKey(Button.Status.OnAlt)) {
+			if (OnImages.ContainsKey(Mode.Alt) && OffImages.ContainsKey(Mode.Alt)) {
 				IsAlt = true;
 			}
 			foreach (var btn in Buttons.Values) {
-				btn.Bmp[Button.Status.On] = BackgroundImages[Button.Status.On].Clone(btn.Rectangle, BackgroundImages[Button.Status.On].PixelFormat);
-				btn.Bmp[Button.Status.Off] = BackgroundImages[Button.Status.Off].Clone(btn.Rectangle, BackgroundImages[Button.Status.Off].PixelFormat);
+				Bitmap bmp;
+				bmp = OnImages[Mode.None];
+				btn.OnBmp[Mode.None] = bmp.Clone(btn.Rectangle, bmp.PixelFormat);
+				bmp = OffImages[Mode.None];
+				btn.OffBmp[Mode.None] = bmp.Clone(btn.Rectangle, bmp.PixelFormat);
 				if (IsControl) {
-					btn.Bmp[Button.Status.OnControl] = BackgroundImages[Button.Status.OnControl].Clone(btn.Rectangle, BackgroundImages[Button.Status.OnControl].PixelFormat);
-					btn.Bmp[Button.Status.OffControl] = BackgroundImages[Button.Status.OffControl].Clone(btn.Rectangle, BackgroundImages[Button.Status.OffControl].PixelFormat);
+					bmp = OnImages[Mode.Control];
+					btn.OnBmp[Mode.Control] = bmp.Clone(btn.Rectangle, bmp.PixelFormat);
+					bmp = OffImages[Mode.Control];
+					btn.OffBmp[Mode.Control] = bmp.Clone(btn.Rectangle, bmp.PixelFormat);
 				}
 				if (IsShift) {
-					btn.Bmp[Button.Status.OnShift] = BackgroundImages[Button.Status.OnShift].Clone(btn.Rectangle, BackgroundImages[Button.Status.OnShift].PixelFormat);
-					btn.Bmp[Button.Status.OffShift] = BackgroundImages[Button.Status.OffShift].Clone(btn.Rectangle, BackgroundImages[Button.Status.OffShift].PixelFormat);
+					bmp = OnImages[Mode.Shift];
+					btn.OnBmp[Mode.Shift] = bmp.Clone(btn.Rectangle, bmp.PixelFormat);
+					bmp = OffImages[Mode.Shift];
+					btn.OffBmp[Mode.Shift] = bmp.Clone(btn.Rectangle, bmp.PixelFormat);
 				}
 				if (IsAlt) {
-					btn.Bmp[Button.Status.OnAlt] = BackgroundImages[Button.Status.OnAlt].Clone(btn.Rectangle, BackgroundImages[Button.Status.OnAlt].PixelFormat);
-					btn.Bmp[Button.Status.OffAlt] = BackgroundImages[Button.Status.OffAlt].Clone(btn.Rectangle, BackgroundImages[Button.Status.OffAlt].PixelFormat);
+					bmp = OnImages[Mode.Alt];
+					btn.OnBmp[Mode.Alt] = bmp.Clone(btn.Rectangle, bmp.PixelFormat);
+					bmp = OffImages[Mode.Alt];
+					btn.OffBmp[Mode.Alt] = bmp.Clone(btn.Rectangle, bmp.PixelFormat);
 				}
 			}
 			return true;
 		}
 
-		private void ReadLocation(ZipArchiveEntry item)
+		private static void ReadLocation(ZipArchiveEntry item)
 		{
 			using (var st = item.Open())
 			using (var tr = new StreamReader(st)) {
@@ -146,7 +160,7 @@ namespace TenCalc
 							key = Keys.Decimal;
 							break;
 						case "ent":
-							key = Keys.Enter;
+							key = Keys.MButton; // Enter
 							break;
 						case "add":
 							key = Keys.Add;
@@ -163,20 +177,20 @@ namespace TenCalc
 						default:
 							continue;
 						}
-						Buttons.Add(key, new Button() { Key = key, Rectangle = new Rectangle(int.Parse(cell[1]), int.Parse(cell[2]), int.Parse(cell[3]), int.Parse(cell[4])) });
+						Buttons.TryAdd(key, new Button() { Key = key, Rectangle = new Rectangle(int.Parse(cell[1]), int.Parse(cell[2]), int.Parse(cell[3]), int.Parse(cell[4])) });
 					}
 				}
 			}
 		}
 
-		private Bitmap ReadImage(ZipArchiveEntry item)
+		private static Bitmap ReadImage(ZipArchiveEntry item)
 		{
 			using (var st = item.Open()) {
 				return new Bitmap(st);
 			}
 		}
 
-		public Button GetButton(Point point)
+		public static Button GetButton(Point point)
 		{
 			foreach (var btn in Buttons.Values) {
 				if (btn.Rectangle.Contains(point)) {
@@ -186,7 +200,7 @@ namespace TenCalc
 			return null;
 		}
 
-		public Button GetButton(Keys key)
+		public static Button GetButton(Keys key)
 		{
 			foreach (var btn in Buttons.Values) {
 				if (btn.Key == key) {
@@ -197,11 +211,11 @@ namespace TenCalc
 		}
 	}
 
-	class Button
+	public class Button
 	{
-		public enum Status { On, Off, OnControl, OffControl, OnShift, OffShift, OnAlt, OffAlt }
 		public Keys Key { get; init; }
 		public Rectangle Rectangle { get; init; }
-		public Dictionary<Status, Bitmap> Bmp { get; set; } = new Dictionary<Status, Bitmap>();
+		public Dictionary<Mode, Bitmap> OnBmp { get; set; } = new Dictionary<Mode, Bitmap>();
+		public Dictionary<Mode, Bitmap> OffBmp { get; set; } = new Dictionary<Mode, Bitmap>();
 	}
 }

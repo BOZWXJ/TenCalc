@@ -10,11 +10,15 @@ using System.Windows.Forms;
 
 namespace TenCalc
 {
+	public enum Mode { None, Control, Shift, Alt };
+	public enum Status { On, Off }
+
 	public partial class CalcForm : Form
 	{
-		readonly CalcCtrl ctrl = new CalcCtrl();
-		readonly KeyboardHook hook = new KeyboardHook();
-		readonly SkinData skin = new SkinData();
+		readonly Calculator calc = new();
+		readonly KeyboardHook hook = new();
+		readonly KeyPad keyPad = new();
+		Image FormImage;
 
 		public CalcForm()
 		{
@@ -29,21 +33,18 @@ namespace TenCalc
 			hook.KeyDownEvent += Hook_KeyDownEvent;
 			hook.KeyUpEvent += Hook_KeyUpEvent;
 
-			if (!skin.LoadSkinFile()) {
+			if (!SkinData.LoadSkinFile()) {
 				MessageBox.Show("Skin 読込異常", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				return;
 			} else {
-				//TransparencyKey = BackColor;
-				Size = skin.BackgroundImages[Button.Status.Off].Size;
 				DesktopLocation = Properties.Settings.Default.WindowPosition;
-				pictureBox1.Image = skin.BackgroundImages[Button.Status.Off];
-				pictureBox1.Refresh();
 			}
 		}
 
 		private void CalcForm_Shown(object sender, EventArgs e)
 		{
-			if (skin.IsLoad && IsKeyLocked(Keys.NumLock) == Properties.Settings.Default.NumLock) {
+			if (SkinData.IsLoad && IsKeyLocked(Keys.NumLock) == Properties.Settings.Default.NumLock) {
+				FormUpdate(Keys.None);
 				Show();
 			} else {
 				Hide();
@@ -65,34 +66,34 @@ namespace TenCalc
 		#region 入力処理
 		bool formDrag = false;
 		Size downPoint;
-		Keys downKey = Keys.None;
-		Button.Status modeOn = Button.Status.On;
-		Button.Status modeOff = Button.Status.Off;
-
+		Keys MouseDownKey;
 		private void CalcForm_MouseDown(object sender, MouseEventArgs e)
 		{
 			if (e.Button == MouseButtons.Left) {
-				var btn = skin.GetButton(e.Location);
+				var btn = SkinData.GetButton(e.Location);
 				if (btn == null) {
 					downPoint = new Size(e.Location);
 					formDrag = true;
-				} else if (downKey == Keys.None) {
-					ctrl.KeyDown(btn.Key);
-					ButtonUpdate(btn.Key, modeOn);
-					downKey = btn.Key;
+				} else {
+					(var key, var can) = keyPad.KeyDown(btn.Key);
+					if (key != Keys.None) {
+						MouseDownKey = key;
+						calc.KeyDown(MouseDownKey);
+						FormUpdate(MouseDownKey);
+					}
 				}
 			} else if (e.Button == MouseButtons.Right) {
-				contextMenuStrip1.Show(pictureBox1, e.Location);
+				contextMenuStrip1.Show(this, e.Location);
 			}
 		}
 
 		private void CalcForm_MouseUp(object sender, MouseEventArgs e)
 		{
-			if (downKey != Keys.None) {
-				ButtonUpdate(downKey, modeOff);
+			if (MouseDownKey != Keys.None) {
+				keyPad.KeyUp(MouseDownKey);
+				FormUpdate(MouseDownKey);
 			}
 			formDrag = false;
-			downKey = Keys.None;
 		}
 
 		private void CalcForm_MouseMove(object sender, MouseEventArgs e)
@@ -105,161 +106,102 @@ namespace TenCalc
 		private void Hook_KeyDownEvent(object sender, KeyHookEventArgs e)
 		{
 			Keys key = ConvertKey(e.VkCode, e.IsLLKHF_EXTENDED);
+			bool cancel;
+			(key, cancel) = keyPad.KeyDown(key);
 			if (Visible) {
-				if (downKey != Keys.None) {
-					e.Cancel = true;
-					return;
-				}
-				switch (key) {
-				case Keys.NumLock:
-					if (!ctrl.IsClear) {
-						ctrl.Clear();
+				if (key != Keys.None) {
+					switch (key) {
+					case Keys.NumLock:
+						if (!calc.IsEnter) {
+							calc.Clear();
+							e.Cancel = true;
+						} else {
+							Hide();
+						}
+						break;
+					case Keys.MButton:  // Enter
+						if (!calc.IsEnter) {
+							calc.Enter();
+							e.Cancel = true;
+						} else {
+							// todo: 結果送信
+							// todo: NumLock ON
+							e.Cancel = true;
+							Hide();
+						}
+						break;
+					case Keys.NumPad0:
+					case Keys.NumPad1:
+					case Keys.NumPad2:
+					case Keys.NumPad3:
+					case Keys.NumPad4:
+					case Keys.NumPad5:
+					case Keys.NumPad6:
+					case Keys.NumPad7:
+					case Keys.NumPad8:
+					case Keys.NumPad9:
+					case Keys.Decimal:
+						calc.KeyDown(key);
 						e.Cancel = true;
-					} else {
-						downKey = key;
-						Hide();
-					}
-					break;
-				case Keys.ControlKey:
-				case Keys.RControlKey:
-				case Keys.LControlKey:
-					BackgroundUpdate(ModifierKeys | Keys.Control);
-					break;
-				case Keys.ShiftKey:
-				case Keys.RShiftKey:
-				case Keys.LShiftKey:
-					BackgroundUpdate(ModifierKeys | Keys.Shift);
-					break;
-				case Keys.Menu:
-				case Keys.RMenu:
-				case Keys.LMenu:
-					BackgroundUpdate(ModifierKeys | Keys.Alt);
-					break;
-				case Keys.NumPad0:
-				case Keys.NumPad1:
-				case Keys.NumPad2:
-				case Keys.NumPad3:
-				case Keys.NumPad4:
-				case Keys.NumPad5:
-				case Keys.NumPad6:
-				case Keys.NumPad7:
-				case Keys.NumPad8:
-				case Keys.NumPad9:
-				case Keys.Decimal:
-					ctrl.KeyDown(key);
-					e.Cancel = true;
-					break;
-				case Keys.Add:
-					ctrl.Add();
-					e.Cancel = true;
-					break;
-				case Keys.Subtract:
-					ctrl.Sub();
-					e.Cancel = true;
-					break;
-				case Keys.Multiply:
-					ctrl.Mul();
-					e.Cancel = true;
-					break;
-				case Keys.Divide:
-					ctrl.Div();
-					e.Cancel = true;
-					break;
-				case Keys.Enter:
-					if (e.IsLLKHF_EXTENDED) {
-						ctrl.Enter();
+						break;
+					case Keys.Add:
+						calc.Add();
 						e.Cancel = true;
-					}
-					break;
-				}
-				if (e.Cancel) {
-					downKey = key;
-					ButtonUpdate(key, modeOn);
-				}
-			} else if (skin.IsLoad) {
-				if (key == Keys.NumLock) {
-					if (downKey == key) {
+						break;
+					case Keys.Subtract:
+						calc.Sub();
 						e.Cancel = true;
-						return;
+						break;
+					case Keys.Multiply:
+						calc.Mul();
+						e.Cancel = true;
+						break;
+					case Keys.Divide:
+						calc.Div();
+						e.Cancel = true;
+						break;
 					}
-					downKey = key;
-					Show();
-					ButtonUpdate(key, modeOn);
+					FormUpdate(key);
+				} else {
+					e.Cancel = cancel;
 				}
+			} else if (SkinData.IsLoad && key == Keys.NumLock && IsKeyLocked(Keys.NumLock) != Properties.Settings.Default.NumLock) {
+				FormUpdate(Keys.None);
+				Show();
 			}
 		}
 
 		private void Hook_KeyUpEvent(object sender, KeyHookEventArgs e)
 		{
-			if (Visible) {
-				Keys key = ConvertKey(e.VkCode, e.IsLLKHF_EXTENDED);
-				switch (key) {
-				case Keys.ControlKey:
-				case Keys.RControlKey:
-				case Keys.LControlKey:
-					BackgroundUpdate(ModifierKeys & ~Keys.Control);
-					break;
-				case Keys.ShiftKey:
-				case Keys.RShiftKey:
-				case Keys.LShiftKey:
-					BackgroundUpdate(ModifierKeys & ~Keys.Shift);
-					break;
-				case Keys.Menu:
-				case Keys.RMenu:
-				case Keys.LMenu:
-					BackgroundUpdate(ModifierKeys & ~Keys.Alt);
-					break;
-				}
-				ButtonUpdate(key, modeOff);
-			}
-			downKey = Keys.None;
-		}
-
-		private void BackgroundUpdate(Keys key)
-		{
-			bool change = false;
-			if (!skin.IsControl) {
-				key &= ~Keys.Control;
-			}
-			if (!skin.IsShift) {
-				key &= ~Keys.Shift;
-			}
-			if (!skin.IsAlt) {
-				key &= ~Keys.Alt;
-			}
-			if ((key & Keys.Modifiers) == 0) {
-				change = modeOn != Button.Status.On;
-				modeOn = Button.Status.On;
-				modeOff = Button.Status.Off;
-			} else if (key == Keys.Control) {
-				change = modeOn != Button.Status.OnControl;
-				modeOn = Button.Status.OnControl;
-				modeOff = Button.Status.OffControl;
-			} else if (key == Keys.Shift) {
-				change = modeOn != Button.Status.OnShift;
-				modeOn = Button.Status.OnShift;
-				modeOff = Button.Status.OffShift;
-			} else if (key == Keys.Alt) {
-				change = modeOn != Button.Status.OnAlt;
-				modeOn = Button.Status.OnAlt;
-				modeOff = Button.Status.OffAlt;
-			}
-			if (change) {
-				Size = skin.BackgroundImages[modeOff].Size;
-				pictureBox1.Image = skin.BackgroundImages[modeOff];
-				pictureBox1.Refresh();
+			Keys key = ConvertKey(e.VkCode, e.IsLLKHF_EXTENDED);
+			key = keyPad.KeyUp(key);
+			if (Visible && key != Keys.None) {
+				FormUpdate(key);
 			}
 		}
 
-		private void ButtonUpdate(Keys key, Button.Status status)
+		private void FormUpdate(Keys key)
 		{
-			var btn = skin.GetButton(key);
-			if (btn != null) {
-				using (Graphics g = Graphics.FromImage(pictureBox1.Image)) {
-					g.DrawImage(btn.Bmp[status], btn.Rectangle);
-				}
-				pictureBox1.Refresh();
+			if (!SkinData.IsLoad) {
+				return;
 			}
+			Bitmap bmp = SkinData.OffImages[keyPad.Mode];
+			FormImage = (Image)bmp.Clone();
+			using (Graphics g = Graphics.FromImage(FormImage)) {
+				// todo: 表示
+				// todo: ボタン
+				var btn = SkinData.GetButton(key);
+				if (btn != null) {
+					if (keyPad.DownKey != Keys.None) {
+						g.DrawImage(btn.OnBmp[keyPad.Mode], btn.Rectangle);
+					} else {
+						g.DrawImage(btn.OffBmp[keyPad.Mode], btn.Rectangle);
+					}
+				}
+			}
+			BackgroundImage = FormImage;
+			Size = BackgroundImage.Size;
+			Refresh();
 		}
 
 		private Keys ConvertKey(Keys keyCode, bool extended)
@@ -300,6 +242,12 @@ namespace TenCalc
 					keyCode = Keys.NumPad9;
 					break;
 				}
+			} else {
+				switch (keyCode) {
+				case Keys.Enter:
+					keyCode = Keys.MButton; // Enter
+					break;
+				}
 			}
 			return keyCode;
 		}
@@ -308,12 +256,17 @@ namespace TenCalc
 		#region メニュー項目
 		private void toolStripMenuItemSetting_Click(object sender, EventArgs e)
 		{
-			new SettingForm().ShowDialog();
+			var dlg = new SettingForm();
+			if (dlg.ShowDialog() == DialogResult.OK && SkinData.Name != Properties.Settings.Default.SkinName) {
+				SkinData.LoadSkinFile();
+				FormUpdate(Keys.None);
+			}
 		}
 
 		private void toolStripMenuItemInfo_Click(object sender, EventArgs e)
 		{
-			new AboutBox().ShowDialog();
+			var dlg = new AboutBox();
+			dlg.ShowDialog();
 		}
 
 		private void toolStripMenuItemExit_Click(object sender, EventArgs e)

@@ -58,5 +58,65 @@ namespace TenCalc.Properties {
                 this["NumLock"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SendResult {
+            get {
+                return ((bool)(this["SendResult"]));
+            }
+            set {
+                this["SendResult"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SendClose {
+            get {
+                return ((bool)(this["SendClose"]));
+            }
+            set {
+                this["SendClose"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SendEnter {
+            get {
+                return ((bool)(this["SendEnter"]));
+            }
+            set {
+                this["SendEnter"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SendSeparator {
+            get {
+                return ((bool)(this["SendSeparator"]));
+            }
+            set {
+                this["SendSeparator"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool SendIMEOff {
+            get {
+                return ((bool)(this["SendIMEOff"]));
+            }
+            set {
+                this["SendIMEOff"] = value;
+            }
+        }
     }
 }
