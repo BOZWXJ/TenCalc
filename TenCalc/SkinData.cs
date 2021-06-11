@@ -19,7 +19,7 @@ namespace TenCalc
 		public static bool IsAlt { get; private set; } = false;
 		public static Dictionary<Mode, Bitmap> OnImages { get; set; } = new Dictionary<Mode, Bitmap>();
 		public static Dictionary<Mode, Bitmap> OffImages { get; set; } = new Dictionary<Mode, Bitmap>();
-		public static Dictionary<Keys, Button> Buttons { get; private set; } = new Dictionary<Keys, Button>();
+		public static Dictionary<Button, ButtonData> Buttons { get; private set; } = new Dictionary<Button, ButtonData>();
 
 		public static bool LoadSkinFile()
 		{
@@ -117,68 +117,23 @@ namespace TenCalc
 			using (var tr = new StreamReader(st)) {
 				string line;
 				while ((line = tr.ReadLine()) != null) {
-					// todo: 表示エリア
+					if (string.IsNullOrWhiteSpace(line)) { continue; }
+					if (line.StartsWith(";")) { continue; } // 行頭が ; の時コメント行
+					line = line.ToLower();
 
-					var cell = line.Split(",");
-					if (cell.Length >= 5) {
-						Keys key;
-						switch (cell[0].ToLower()) {
-						case "num":
-							key = Keys.NumLock;
-							break;
-						case "0":
-							key = Keys.NumPad0;
-							break;
-						case "1":
-							key = Keys.NumPad1;
-							break;
-						case "2":
-							key = Keys.NumPad2;
-							break;
-						case "3":
-							key = Keys.NumPad3;
-							break;
-						case "4":
-							key = Keys.NumPad4;
-							break;
-						case "5":
-							key = Keys.NumPad5;
-							break;
-						case "6":
-							key = Keys.NumPad6;
-							break;
-						case "7":
-							key = Keys.NumPad7;
-							break;
-						case "8":
-							key = Keys.NumPad8;
-							break;
-						case "9":
-							key = Keys.NumPad9;
-							break;
-						case "p":
-							key = Keys.Decimal;
-							break;
-						case "ent":
-							key = Keys.MButton; // Enter
-							break;
-						case "add":
-							key = Keys.Add;
-							break;
-						case "sub":
-							key = Keys.Subtract;
-							break;
-						case "mul":
-							key = Keys.Multiply;
-							break;
-						case "div":
-							key = Keys.Divide;
-							break;
-						default:
-							continue;
-						}
-						Buttons.TryAdd(key, new Button() { Key = key, Rectangle = new Rectangle(int.Parse(cell[1]), int.Parse(cell[2]), int.Parse(cell[3]), int.Parse(cell[4])) });
+					if (line.StartsWith("disp")) {
+						// todo: 表示エリア
+
+						continue;
 					}
+
+					// ボタンエリア
+					string[] cell = line.Split(",");
+					if (cell.Length < 6) { continue; }
+					Button btn = Enum.Parse<Button>(cell[0], true);
+					string[] cmd = new string[cell.Length - 5];
+					Array.Copy(cell, 5, cmd, 0, cell.Length - 5);
+					Buttons.TryAdd(btn, new ButtonData() { Key = btn, Rectangle = new Rectangle(int.Parse(cell[1]), int.Parse(cell[2]), int.Parse(cell[3]), int.Parse(cell[4])), Command = cmd });
 				}
 			}
 		}
@@ -190,7 +145,7 @@ namespace TenCalc
 			}
 		}
 
-		public static Button GetButton(Point point)
+		public static ButtonData GetButton(Point point)
 		{
 			foreach (var btn in Buttons.Values) {
 				if (btn.Rectangle.Contains(point)) {
@@ -200,21 +155,20 @@ namespace TenCalc
 			return null;
 		}
 
-		public static Button GetButton(Keys key)
+		public static ButtonData GetButton(Button btn)
 		{
-			foreach (var btn in Buttons.Values) {
-				if (btn.Key == key) {
-					return btn;
-				}
+			if (Buttons.ContainsKey(btn)) {
+				return Buttons[btn];
 			}
 			return null;
 		}
 	}
 
-	public class Button
+	public class ButtonData
 	{
-		public Keys Key { get; init; }
+		public Button Key { get; init; }
 		public Rectangle Rectangle { get; init; }
+		public string[] Command { get; init; }
 		public Dictionary<Mode, Bitmap> OnBmp { get; set; } = new Dictionary<Mode, Bitmap>();
 		public Dictionary<Mode, Bitmap> OffBmp { get; set; } = new Dictionary<Mode, Bitmap>();
 	}

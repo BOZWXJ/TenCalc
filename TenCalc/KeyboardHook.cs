@@ -39,12 +39,12 @@ namespace TenCalc
 		{
 			bool cancel = false;
 			if (nCode >= 0 && (wParam == (IntPtr)User32.WindowMessage.WM_KEYDOWN || wParam == (IntPtr)User32.WindowMessage.WM_SYSKEYDOWN)) {
-				var kb = (Win32Api.KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(Win32Api.KBDLLHOOKSTRUCT));
+				Win32Api.KBDLLHOOKSTRUCT kb = (Win32Api.KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(Win32Api.KBDLLHOOKSTRUCT));
 				if ((kb.dwFlags & Win32Api.KBDLLHOOKSTRUCTF.LLKHF_INJECTED) == 0) {
 					cancel = OnKeyDownEvent(kb);
 				}
 			} else if (nCode >= 0 && (wParam == (IntPtr)User32.WindowMessage.WM_KEYUP || wParam == (IntPtr)User32.WindowMessage.WM_SYSKEYUP)) {
-				var kb = (Win32Api.KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(Win32Api.KBDLLHOOKSTRUCT));
+				Win32Api.KBDLLHOOKSTRUCT kb = (Win32Api.KBDLLHOOKSTRUCT)Marshal.PtrToStructure(lParam, typeof(Win32Api.KBDLLHOOKSTRUCT));
 				if ((kb.dwFlags & Win32Api.KBDLLHOOKSTRUCTF.LLKHF_INJECTED) == 0) {
 					cancel = OnKeyUpEvent(kb);
 				}
@@ -62,14 +62,14 @@ namespace TenCalc
 
 		protected bool OnKeyDownEvent(Win32Api.KBDLLHOOKSTRUCT kb)
 		{
-			var e = new KeyHookEventArgs(kb);
+			KeyHookEventArgs e = new(kb);
 			KeyDownEvent?.Invoke(this, e);
 			return e.Cancel;
 		}
 
 		protected bool OnKeyUpEvent(Win32Api.KBDLLHOOKSTRUCT kb)
 		{
-			var e = new KeyHookEventArgs(kb);
+			KeyHookEventArgs e = new(kb);
 			KeyUpEvent?.Invoke(this, e);
 			return e.Cancel;
 		}

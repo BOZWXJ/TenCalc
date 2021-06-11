@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Skin\Default2\Location.txt" />
     <Content Include="Skin\Default\Location.txt" />
     <Content Include="Skin\Default\OFF1.BMP" />
     <Content Include="Skin\Default\ON1.BMP" />
@@ -28,6 +29,9 @@
 
   <ItemGroup>
     <None Include="Skin\Default.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Skin\Default2.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

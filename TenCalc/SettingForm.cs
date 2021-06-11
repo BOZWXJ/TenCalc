@@ -16,6 +16,7 @@ namespace TenCalc
 		public SettingForm()
 		{
 			InitializeComponent();
+			Icon = Properties.Resources.TenCalc;
 		}
 
 		private void SettingForm_Shown(object sender, EventArgs e)

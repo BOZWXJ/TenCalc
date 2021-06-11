@@ -9,62 +9,55 @@ namespace TenCalc
 {
 	class Calculator
 	{
-		public bool IsEnter { get; private set; } = true;
-
-		public void Clear()
+		readonly Display display;
+		public Calculator(Display disp)
 		{
-			//System.Diagnostics.Debug.WriteLine("Calculator Clear");
-			IsEnter = true;
+			display = disp;
+		}
+
+		internal void Clear()
+		{
+
 		}
 
 		public void Enter()
 		{
-			//System.Diagnostics.Debug.WriteLine("Calculator Enter");
-			IsEnter = true;
-		}
+			display.GetValue(out long significand, out int exponent);
+			System.Diagnostics.Debug.WriteLine($"Enter {significand}*10^{exponent}");
 
-		public void KeyDown(Keys key)
-		{
-			//System.Diagnostics.Debug.WriteLine($"Calculator {key}");
-			switch (key) {
-			case Keys.NumPad0:
-			case Keys.NumPad1:
-			case Keys.NumPad2:
-			case Keys.NumPad3:
-			case Keys.NumPad4:
-			case Keys.NumPad5:
-			case Keys.NumPad6:
-			case Keys.NumPad7:
-			case Keys.NumPad8:
-			case Keys.NumPad9:
-			case Keys.Decimal:
-				IsEnter = false;
-				break;
-			}
+			display.SetValue(significand, exponent);
 		}
 
 		public void Add()
 		{
-			//System.Diagnostics.Debug.WriteLine("Calculator Add");
-			IsEnter = false;
+			display.GetValue(out long significand, out int exponent);
+			System.Diagnostics.Debug.WriteLine($"Add {significand}*10^{exponent}");
+
+			display.SetValue(significand, exponent);
 		}
 
 		public void Sub()
 		{
-			//System.Diagnostics.Debug.WriteLine("Calculator Sub");
-			IsEnter = false;
+			display.GetValue(out long significand, out int exponent);
+			System.Diagnostics.Debug.WriteLine($"Sub {significand}*10^{exponent}");
+
+			display.SetValue(significand, exponent);
 		}
 
 		public void Mul()
 		{
-			//System.Diagnostics.Debug.WriteLine("Calculator Mul");
-			IsEnter = false;
+			display.GetValue(out long significand, out int exponent);
+			System.Diagnostics.Debug.WriteLine($"Mul {significand}*10^{exponent}");
+
+			display.SetValue(significand, exponent);
 		}
 
 		public void Div()
 		{
-			//System.Diagnostics.Debug.WriteLine("Calculator Div");
-			IsEnter = false;
+			display.GetValue(out long significand, out int exponent);
+			System.Diagnostics.Debug.WriteLine($"Div {significand}*10^{exponent}");
+
+			display.SetValue(significand, exponent);
 		}
 
 	}
