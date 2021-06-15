@@ -200,23 +200,6 @@ namespace TenCalc
 			}
 		}
 
-		public void Pi()
-		{
-			Clear();
-			Value[0].Character = '4';
-			Value[0].DecimalPoint = false;
-			Value[1].Character = '5';
-			Value[2].Character = '6';
-			Value[3].Character = '2';
-			Value[4].Character = '9';
-			Value[5].Character = '5';
-			Value[6].Character = '1';
-			Value[7].Character = '4';
-			Value[8].Character = '1';
-			Value[9].Character = '3';
-			Value[9].DecimalPoint = true;
-		}
-
 		#endregion
 
 		public void GetValue(out long significand, out int exponent)
@@ -249,7 +232,10 @@ namespace TenCalc
 
 		public void SetValue(long significand, int exponent)
 		{
-			Clear();
+			// Clear();
+			InputLen = 0;
+			InputExp = false;
+			DecimalPoint = false;
 
 
 
@@ -261,7 +247,9 @@ namespace TenCalc
 
 		public override string ToString()
 		{
-			return $"|{string.Concat(Value.Reverse().Select(p => $"{p.Character}{(p.Comma ? "," : "")}{(p.DecimalPoint ? "." : "")}"))}|{new string(Exponent.Reverse().ToArray())}|{InputLen},{DecimalPoint}";
+			string val = string.Concat(Value.Reverse().Select(p => $"{p.Character}{(p.Comma ? "," : "")}{(p.DecimalPoint ? "." : "")}"));
+			string exp = new string(Exponent.Reverse().ToArray());
+			return $"|{val}|{exp}|{InputLen},{DecimalPoint}";
 		}
 
 	}

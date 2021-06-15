@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PInvoke;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -134,16 +135,16 @@ namespace TenCalc
 			// キーリピートのキャンセル
 			bool cancel = false;
 			switch (btn) {
-			case Button.ControlKey:
-				if (DownButton == Button.None && Mode == Mode.None && SkinData.IsControl) {
-					Mode = Mode.Control;
+			case Button.ShiftKey:
+				if (DownButton == Button.None && Mode == Mode.None && SkinData.IsShift) {
+					Mode = Mode.Shift;
 				} else {
 					btn = Button.None;
 				}
 				break;
-			case Button.ShiftKey:
-				if (DownButton == Button.None && Mode == Mode.None && SkinData.IsShift) {
-					Mode = Mode.Shift;
+			case Button.ControlKey:
+				if (DownButton == Button.None && Mode == Mode.None && SkinData.IsControl) {
+					Mode = Mode.Control;
 				} else {
 					btn = Button.None;
 				}
@@ -175,11 +176,10 @@ namespace TenCalc
 				DownButton = Button.None;
 				result = btn;
 
-				// 
-				if (Control.ModifierKeys == Keys.Control && SkinData.IsControl) {
-					Mode = Mode.Control;
-				} else if (Control.ModifierKeys == Keys.Shift && SkinData.IsShift) {
+				if (Control.ModifierKeys == Keys.Shift && SkinData.IsShift) {
 					Mode = Mode.Shift;
+				} else if (Control.ModifierKeys == Keys.Control && SkinData.IsControl) {
+					Mode = Mode.Control;
 				} else if (Control.ModifierKeys == Keys.Alt && SkinData.IsAlt) {
 					Mode = Mode.Alt;
 				} else if (Control.ModifierKeys == Keys.None) {
@@ -187,14 +187,14 @@ namespace TenCalc
 				}
 			} else if (DownButton == Button.None) {
 				switch (btn) {
-				case Button.ControlKey:
-					if (Mode == Mode.Control) {
+				case Button.ShiftKey:
+					if (Mode == Mode.Shift) {
 						Mode = Mode.None;
 						result = btn;
 					}
 					break;
-				case Button.ShiftKey:
-					if (Mode == Mode.Shift) {
+				case Button.ControlKey:
+					if (Mode == Mode.Control) {
 						Mode = Mode.None;
 						result = btn;
 					}
@@ -236,12 +236,22 @@ namespace TenCalc
 					calc.Enter();
 					btn = Button.Enter;
 				} else {
-					if (Properties.Settings.Default.SendResult) {
-						// todo: 結果送信
+					if (Properties.Settings.Default.SendIMEOff) {
+						Win32Api.SendKey((Keys)26);
 					}
-					// todo: NumLock ON
+					if (Properties.Settings.Default.SendResult) {
+						display.GetValue(out long significand, out int exponent);
+						if (Properties.Settings.Default.SendSeparator) {
+							// todo: 
+						}
+						Win32Api.SendKeys($"{significand}");
+					}
+					if (Properties.Settings.Default.SendEnter) {
+						Win32Api.SendKey(Keys.Enter);
+					}
 					if (Properties.Settings.Default.SendClose) {
 						btn = Button.NumLock;
+						Win32Api.SendKey(Keys.NumLock);
 					}
 				}
 				break;
@@ -257,9 +267,6 @@ namespace TenCalc
 			case "exp":
 				display.Exp();
 				break;
-			case "pi":
-				display.Pi();
-				break;
 
 			case "add":
 				calc.Add();
@@ -274,6 +281,7 @@ namespace TenCalc
 				calc.Div();
 				break;
 
+			case "pi":
 			case "mc":
 			case "mr":
 			case "m+":

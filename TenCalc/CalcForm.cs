@@ -94,6 +94,9 @@ namespace TenCalc
 			Properties.Settings.Default.WindowPosition = DesktopLocation;
 			Properties.Settings.Default.Save();
 			notifyIcon1.Visible = false;
+
+			// todo: NumLock の状態を戻す
+
 		}
 
 		private void CalcForm_FormClosed(object sender, FormClosedEventArgs e)
